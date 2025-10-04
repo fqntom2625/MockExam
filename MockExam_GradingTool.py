@@ -78,11 +78,12 @@ def _max_scores(weights):
     return lc_max, rc_max, lc_max + rc_max
 
 def main():
-    print("=== 모의고사 영어 채점기 === (종료: q)")
+    print("=== 모의고사 영어 채점기 ===")
     print("- 총 45문항 (LC 1~17, RC 18~45)")
     print("- 입력 방법: 5문제씩 끊어서 9번 입력")
     print("  예시) 1~5번 → 4 1 5 5 2")
     print("- 허용 값: 1~5 (정답 선택), 6 = 무효 답안(빈칸/두개 답)")
+    print("- 입력 중 'r' 입력 시: 재채점(처음부터 다시 시작)")
 
     try:
         _validate_key()
@@ -94,16 +95,17 @@ def main():
     lc_max, rc_max, total_max = _max_scores(weights)
 
     while True:
-        print("\n학생 답안 입력 시작 (종료: q)")
+        print("\n학생 답안 입력 시작 (재채점: r)")
         all_answers = []
         valid = True
         for group in range(9):  # 45문항 / 5문항씩 = 9회 입력
             start_q = group * 5 + 1
             end_q = start_q + 4
             raw = input(f"{start_q}~{end_q}번 답안 입력(5개): ").strip()
-            if raw.lower() in {"q", "quit", "exit"}:
-                print("채점 종료")
-                return
+            if raw.lower() == "r":
+                print("🔄 재채점 시작")
+                valid = False
+                break
             parsed = _parse_answers_group(raw, 5)
             if parsed is None:
                 print("❗ 형식 오류: 1~6만 사용, 정확히 5개 입력 필요")
@@ -112,7 +114,7 @@ def main():
             all_answers.extend(parsed)
 
         if not valid:
-            continue  # 다시 입력 받음
+            continue  # 재채점 또는 형식 오류 → 처음으로 돌아감
 
         stu = all_answers
 
@@ -132,6 +134,8 @@ def main():
                 print(f"  LC(1~17): {', '.join(map(str, lc_wrong))}")
             if rc_wrong:
                 print(f"  RC(18~45): {', '.join(map(str, rc_wrong))}")
+
+        print("\n👉 다음 학생 채점 또는 'r' 입력으로 재채점 가능")
 
 if __name__ == "__main__":
     main()
