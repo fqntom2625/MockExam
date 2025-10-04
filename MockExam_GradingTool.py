@@ -97,28 +97,37 @@ def main():
     while True:
         print("\n학생 답안 입력 시작 (재채점: r)")
         all_answers = []
-        valid = True
+        restart = False
+
         for group in range(9):  # 45문항 / 5문항씩 = 9회 입력
             start_q = group * 5 + 1
             end_q = start_q + 4
-            raw = input(f"{start_q}~{end_q}번 답안 입력(5개): ").strip()
-            if raw.lower() == "r":
-                print("🔄 재채점 시작")
-                valid = False
-                break
-            parsed = _parse_answers_group(raw, 5)
-            if parsed is None:
-                print("❗ 형식 오류: 1~6만 사용, 정확히 5개 입력 필요")
-                valid = False
-                break
-            all_answers.extend(parsed)
 
-        if not valid:
-            continue  # 재채점 또는 형식 오류 → 처음으로 돌아감
+            # ❗ 해당 구간을 '정확히 입력될 때까지' 반복
+            while True:
+                raw = input(f"{start_q}~{end_q}번 답안 입력(5개): ").strip()
+                if raw.lower() == "r":
+                    print("🔄 재채점 시작")
+                    restart = True
+                    break
 
-        stu = all_answers
+                parsed = _parse_answers_group(raw, 5)
+                if parsed is None:
+                    print("❗ 형식 오류: 1~6만 사용, 정확히 5개 입력 필요")
+                    # 같은 파트를 다시 입력 받음
+                    continue
+
+                all_answers.extend(parsed)
+                break  # 다음 파트로 진행
+
+            if restart:
+                break  # for group 루프 탈출 → 전체 재시작
+
+        if restart:
+            continue  # while True의 처음으로(1번부터 다시)
 
         # 채점
+        stu = all_answers
         lc_score, lc_got, lc_total, lc_wrong = _score_section(ANSWER_KEY, stu, weights, 0, N_LC)
         rc_score, rc_got, rc_total, rc_wrong = _score_section(ANSWER_KEY, stu, weights, N_LC, N_TOTAL)
         total = lc_score + rc_score
